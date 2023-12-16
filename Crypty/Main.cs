@@ -60,21 +60,38 @@ namespace Crypty
         {
             try
             {
-                tbPath.Text = location;
-                using (var info = File.Open(location, FileMode.Open))
+                if (File.Exists(location))
                 {
-                    tbSize.Text = FormatSize(info.Length);
-                    byte[] bytes = new byte[info.Length];
-                    info.Read(bytes, 0, bytes.Length);
-                    tbSha.Text = GetSHA1(bytes);
-                    info.Close();
+                    tbPath.Text = location;
+                    using (var info = File.Open(location, FileMode.Open))
+                    {
+                        tbSize.Text = FormatSize(info.Length);
+                        byte[] bytes = new byte[info.Length];
+                        info.Read(bytes, 0, bytes.Length);
+                        tbSha.Text = GetSHA1(bytes);
+                        info.Close();
+                    }
+                    pbIcon.Image = Icon.ExtractAssociatedIcon(location).ToBitmap();
+                    btnShowMore.Visible = true;
+                    btnEncrypt.Visible = true;
+                    btnEncryptAs.Visible = true;
+                    btnDecrypt.Visible = true;
+                    btnDecryptAs.Visible = true;
                 }
-                pbIcon.Image = Icon.ExtractAssociatedIcon(location).ToBitmap();
-                btnShowMore.Visible = true;
-                btnEncrypt.Visible = true;
-                btnEncryptAs.Visible = true;
-                btnDecrypt.Visible = true;
-                btnDecryptAs.Visible = true;
+                else if (Directory.Exists(location))
+                {
+                    tbPath.Text = location;
+                    var info = new DirectoryInfo(location);
+                    tbSize.Text = FormatSize(info.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length));
+                    tbSha.Text = string.Empty;
+                    pbIcon.Image = Properties.Resources.folder;
+
+                    btnShowMore.Visible = false;
+                    btnEncrypt.Visible = true;
+                    btnEncryptAs.Visible = false;
+                    btnDecrypt.Visible = true;
+                    btnDecryptAs.Visible = false;
+                }
             }
             catch (UnauthorizedAccessException)
             {
@@ -96,6 +113,7 @@ namespace Crypty
                 var OFD = new OpenFileDialog();
                 OFD.Title = "Select file to encrypt";
                 OFD.Multiselect = false;
+
                 if (OFD.ShowDialog() == DialogResult.OK)
                 {
                     SetAssemblyInfo(OFD.FileName);
@@ -247,28 +265,65 @@ namespace Crypty
                             break;
                     }
                 }
-                using (var file = File.Open(tbPath.Text, FileMode.Open, FileAccess.ReadWrite))
+
+                if (File.Exists(tbPath.Text))
                 {
-                    var bytes = new byte[file.Length];
-                    file.Read(bytes, 0, bytes.Length);
-                    var encryptedBytes = new byte[32];
-                    switch (cbAlgorithm.SelectedIndex)
+                    using (var file = File.Open(tbPath.Text, FileMode.Open, FileAccess.ReadWrite))
                     {
-                        case 0:
-                            encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
-                            break;
-                        case 1:
-                            encryptedBytes = Encryption.DesEncrypt(bytes, Key, IV);
-                            break;
-                        case 2:
-                            encryptedBytes = Encryption.TripleDesEncrypt(bytes, Key, IV);
-                            break;
-                        default:
-                            encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
-                            break;
+                        var bytes = new byte[file.Length];
+                        file.Read(bytes, 0, bytes.Length);
+                        byte[] encryptedBytes;
+                        switch (cbAlgorithm.SelectedIndex)
+                        {
+                            case 0:
+                                encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
+                                break;
+                            case 1:
+                                encryptedBytes = Encryption.DesEncrypt(bytes, Key, IV);
+                                break;
+                            case 2:
+                                encryptedBytes = Encryption.TripleDesEncrypt(bytes, Key, IV);
+                                break;
+                            default:
+                                encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
+                                break;
+                        }
+                        file.Seek(0, SeekOrigin.Begin);
+                        file.Write(encryptedBytes, 0, encryptedBytes.Length);
+                        file.SetLength(encryptedBytes.Length);
+                        file.Close();
                     }
-                    file.Seek(0, SeekOrigin.Begin);
-                    file.Write(encryptedBytes, 0, encryptedBytes.Length);
+                }
+                else if (Directory.Exists(tbPath.Text))
+                {
+                    foreach (var path in Directory.GetFiles(tbPath.Text, "*", SearchOption.AllDirectories))
+                    {
+                        using (var file = File.Open(path, FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            var bytes = new byte[file.Length];
+                            file.Read(bytes, 0, bytes.Length);
+                            byte[] encryptedBytes;
+                            switch (cbAlgorithm.SelectedIndex)
+                            {
+                                case 0:
+                                    encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
+                                    break;
+                                case 1:
+                                    encryptedBytes = Encryption.DesEncrypt(bytes, Key, IV);
+                                    break;
+                                case 2:
+                                    encryptedBytes = Encryption.TripleDesEncrypt(bytes, Key, IV);
+                                    break;
+                                default:
+                                    encryptedBytes = Encryption.AesEncrypt(bytes, Key, IV);
+                                    break;
+                            }
+                            file.Seek(0, SeekOrigin.Begin);
+                            file.Write(encryptedBytes, 0, encryptedBytes.Length);
+                            file.SetLength(encryptedBytes.Length);
+                            file.Close();
+                        }
+                    }
                 }
                 SetAssemblyInfo(tbPath.Text);
                 MessageBox.Show("File Encrypted Sucessfully", "Crypty");
@@ -316,29 +371,65 @@ namespace Crypty
                             break;
                     }
                 }
-                using (var file = File.Open(tbPath.Text, FileMode.Open, FileAccess.ReadWrite))
+
+                if (File.Exists(tbPath.Text))
                 {
-                    var bytes = new byte[file.Length];
-                    file.Read(bytes, 0, bytes.Length);
-                    var decryptedBytes = new byte[32];
-                    switch (cbAlgorithm.SelectedIndex)
+                    using (var file = File.Open(tbPath.Text, FileMode.Open, FileAccess.ReadWrite))
                     {
-                        case 0:
-                            decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
-                            break;
-                        case 1:
-                            decryptedBytes = Encryption.DesDecrypt(bytes, Key, IV);
-                            break;
-                        case 2:
-                            decryptedBytes = Encryption.TripleDesDecrypt(bytes, Key, IV);
-                            break;
-                        default:
-                            decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
-                            break;
+                        var bytes = new byte[file.Length];
+                        file.Read(bytes, 0, bytes.Length);
+                        byte[] decryptedBytes;
+                        switch (cbAlgorithm.SelectedIndex)
+                        {
+                            case 0:
+                                decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
+                                break;
+                            case 1:
+                                decryptedBytes = Encryption.DesDecrypt(bytes, Key, IV);
+                                break;
+                            case 2:
+                                decryptedBytes = Encryption.TripleDesDecrypt(bytes, Key, IV);
+                                break;
+                            default:
+                                decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
+                                break;
+                        }
+                        file.Seek(0, SeekOrigin.Begin);
+                        file.Write(decryptedBytes, 0, decryptedBytes.Length);
+                        file.SetLength(decryptedBytes.Length);
+                        file.Close();
                     }
-                    file.Seek(0, SeekOrigin.Begin);
-                    file.Write(decryptedBytes, 0, decryptedBytes.Length);
-                    file.SetLength(decryptedBytes.Length);
+                }
+                else if (Directory.Exists(tbPath.Text))
+                {
+                    foreach (var path in Directory.GetFiles(tbPath.Text, "*", SearchOption.AllDirectories))
+                    {
+                        using (var file = File.Open(path, FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            var bytes = new byte[file.Length];
+                            file.Read(bytes, 0, bytes.Length);
+                            byte[] decryptedBytes;
+                            switch (cbAlgorithm.SelectedIndex)
+                            {
+                                case 0:
+                                    decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
+                                    break;
+                                case 1:
+                                    decryptedBytes = Encryption.DesDecrypt(bytes, Key, IV);
+                                    break;
+                                case 2:
+                                    decryptedBytes = Encryption.TripleDesDecrypt(bytes, Key, IV);
+                                    break;
+                                default:
+                                    decryptedBytes = Encryption.AesDecrypt(bytes, Key, IV);
+                                    break;
+                            }
+                            file.Seek(0, SeekOrigin.Begin);
+                            file.Write(decryptedBytes, 0, decryptedBytes.Length);
+                            file.SetLength(decryptedBytes.Length);
+                            file.Close();
+                        }
+                    }
                 }
                 SetAssemblyInfo(tbPath.Text);
                 MessageBox.Show("File Decrypted Sucessfully", "Crypty");

@@ -53,6 +53,7 @@
             this.btnEncryptAs = new System.Windows.Forms.Button();
             this.btnDecrypt = new System.Windows.Forms.Button();
             this.btnDecryptAs = new System.Windows.Forms.Button();
+            this.lblFileCount = new System.Windows.Forms.Label();
             this.pAssemblyInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbIcon)).BeginInit();
             this.pBase64Key.SuspendLayout();
@@ -62,6 +63,7 @@
             // pAssemblyInfo
             // 
             this.pAssemblyInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pAssemblyInfo.Controls.Add(this.lblFileCount);
             this.pAssemblyInfo.Controls.Add(this.btnShowMore);
             this.pAssemblyInfo.Controls.Add(this.tbSha);
             this.pAssemblyInfo.Controls.Add(this.bSelect);
@@ -327,6 +329,18 @@
             this.btnDecryptAs.Visible = false;
             this.btnDecryptAs.Click += new System.EventHandler(this.btnDecryptAs_Click);
             // 
+            // lblFileCount
+            // 
+            this.lblFileCount.AutoSize = true;
+            this.lblFileCount.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblFileCount.ForeColor = System.Drawing.Color.Gray;
+            this.lblFileCount.Location = new System.Drawing.Point(134, 104);
+            this.lblFileCount.Name = "lblFileCount";
+            this.lblFileCount.Size = new System.Drawing.Size(39, 15);
+            this.lblFileCount.TabIndex = 5;
+            this.lblFileCount.Text = "0 Files";
+            this.lblFileCount.Visible = false;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -391,6 +405,7 @@
         private System.Windows.Forms.Button btnEncryptAs;
         private System.Windows.Forms.Button btnDecrypt;
         private System.Windows.Forms.Button btnDecryptAs;
+        private System.Windows.Forms.Label lblFileCount;
     }
 }
 
