@@ -72,6 +72,9 @@ namespace Crypty
                         info.Close();
                     }
                     pbIcon.Image = Icon.ExtractAssociatedIcon(location).ToBitmap();
+                    lblFileCount.Visible = false;
+                    lblFileCount.Text = string.Empty;
+
                     btnShowMore.Visible = true;
                     btnEncrypt.Visible = true;
                     btnEncryptAs.Visible = true;
@@ -85,6 +88,8 @@ namespace Crypty
                     tbSize.Text = FormatSize(info.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length));
                     tbSha.Text = string.Empty;
                     pbIcon.Image = Properties.Resources.folder;
+                    lblFileCount.Text = $"{Directory.GetFiles(tbPath.Text, "*", SearchOption.AllDirectories).Count()} Files";
+                    lblFileCount.Visible = true;
 
                     btnShowMore.Visible = false;
                     btnEncrypt.Visible = true;
