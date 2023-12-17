@@ -596,6 +596,24 @@ namespace Crypty
                 MessageBox.Show(ex.ToString(), ex.GetType().ToString());
             }
         }
+
+        private void pAssemblyInfo_DragDrop(object sender, DragEventArgs e)
+        {
+            var path = ((string[])e.Data.GetData(DataFormats.FileDrop, false))[0];
+            SetAssemblyInfo(path);
+        }
+
+        private void pAssemblyInfo_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
     }
 
     public class ComboboxItem
